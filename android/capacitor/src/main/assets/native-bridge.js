@@ -829,6 +829,7 @@ var nativeBridge = (function (exports) {
             cap.getPlatform = getPlatform;
             cap.isPluginAvailable = name => Object.prototype.hasOwnProperty.call(cap.Plugins, name);
             cap.isNativePlatform = isNativePlatform;
+            cap.callPluginMethodSync = callPluginMethodSync;
             // create the postToNative() fn if needed
             if (getPlatformId(win) === 'android') {
                 // android platform
@@ -1010,6 +1011,15 @@ var nativeBridge = (function (exports) {
         }
         initNativeBridge(w);
     };
+    function callPluginMethodSync(pluginName, methodName, args) {
+        const payload = {
+            type: 'Capacitor.callPluginMethodSync',
+            pluginName: pluginName,
+            methodName: methodName,
+            args: args
+        };
+        return prompt(JSON.stringify(payload)) || undefined;
+    }
     initBridge(typeof globalThis !== 'undefined'
         ? globalThis
         : typeof self !== 'undefined'

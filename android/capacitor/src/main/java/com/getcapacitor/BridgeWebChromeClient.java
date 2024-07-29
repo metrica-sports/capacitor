@@ -27,6 +27,10 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.FileProvider;
 import com.getcapacitor.util.PermissionHelper;
+import com.getcapacitor.PluginHandle;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -227,6 +231,36 @@ public class BridgeWebChromeClient extends WebChromeClient {
     public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, final JsPromptResult result) {
         if (bridge.getActivity().isFinishing()) {
             return true;
+        }
+        JSONObject payload = null;
+        try {
+            payload = new JSONObject(message);
+        }catch (JSONException exception){
+        }
+
+        if(payload != null && payload.has("type")) {
+            boolean isMethodCall = false;
+            try{
+                String type = payload.getString("type");
+                if(type.equalsIgnoreCase("Capacitor.callPluginMethodSync")){
+                    isMethodCall = true;
+                }
+            }catch(JSONException exception){
+            }
+
+            if(isMethodCall){
+                try{
+                    String pluginName = payload.getString("pluginName");
+                    String methodName = payload.getString("methodName");
+                    JSONArray args = payload.getJSONArray("args");
+                    PluginHandle plugin = bridge.getPlugin(pluginName);
+                    if(plugin == null){
+                        return true;
+                    }
+                    result.confirm(plugin.invokeSync(methodName, args).toString());
+                }catch(Exception ex){}
+                return true;
+            }
         }
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());

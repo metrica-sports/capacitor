@@ -42,6 +42,15 @@ export interface CapacitorGlobal {
   ) => PluginListenerHandle;
 
   /**
+   * Sync Plugin Functions
+   */
+  callPluginMethodSync?: (
+    pluginName: string,
+    methodName: string,
+    args: any[]
+  ) => string | undefined;
+
+  /**
    * Remove a listener to a plugin event.
    */
   removeListener?: (

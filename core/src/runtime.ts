@@ -113,6 +113,26 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
       return jsImplementation;
     };
 
+    const loadPluginImplementationSync = (): any => {
+      if (!jsImplementation && platform in jsImplementations) {
+        jsImplementation =
+          typeof jsImplementations[platform] === 'function'
+            ? (jsImplementation = jsImplementations[platform]())
+            : (jsImplementation = jsImplementations[platform]);
+      } else if (
+        capCustomPlatform !== null &&
+        !jsImplementation &&
+        'web' in jsImplementations
+      ) {
+        jsImplementation =
+          typeof jsImplementations['web'] === 'function'
+            ? (jsImplementation = jsImplementations['web']())
+            : (jsImplementation = jsImplementations['web']);
+      }
+
+      return jsImplementation;
+    };
+
     const createPluginMethod = (
       impl: any,
       prop: PropertyKey,
@@ -123,7 +143,10 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
           if (methodHeader.rtype === 'promise') {
             return (options: any) =>
               cap.nativePromise(pluginName, prop.toString(), options);
-          } else {
+          }else if (methodHeader.rtype === 'string') {
+            return (args: any[]) =>
+              cap.callPluginMethodSync(pluginName, prop.toString(), args);
+          }else {
             return (options: any, callback: any) =>
               cap.nativeCallback(
                 pluginName,
@@ -148,9 +171,41 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
     const createPluginMethodWrapper = (prop: PropertyKey) => {
       let remove: (() => void) | undefined;
       const wrapper = (...args: any[]) => {
-        const p = loadPluginImplementation().then(impl => {
+        let isSyncMethod = false;
+        if (pluginHeader) {
+          const methodHeader = pluginHeader?.methods.find(m => prop === m.name);
+          if (methodHeader) {
+            if(methodHeader.rtype === 'string'){
+              isSyncMethod = true;
+            }
+          }
+        }
+        if(!isSyncMethod){
+          const p = loadPluginImplementation().then(impl => {
+            const fn = createPluginMethod(impl, prop);
+  
+            if (fn) {
+              const p = fn(...args);
+              remove = p?.remove;
+              return p;
+            } else {
+              throw new CapacitorException(
+                `"${pluginName}.${
+                  prop as any
+                }()" is not implemented on ${platform}`,
+                ExceptionCode.Unimplemented,
+              );
+            }
+          });
+  
+          if (prop === 'addListener') {
+            (p as any).remove = async () => remove();
+          }
+  
+          return p;
+        }else{
+          const impl = loadPluginImplementationSync();
           const fn = createPluginMethod(impl, prop);
-
           if (fn) {
             const p = fn(...args);
             remove = p?.remove;
@@ -163,13 +218,7 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
               ExceptionCode.Unimplemented,
             );
           }
-        });
-
-        if (prop === 'addListener') {
-          (p as any).remove = async () => remove();
         }
-
-        return p;
       };
 
       // Some flair ✨

@@ -16,7 +16,7 @@ public class PluginMethodHandle {
 
         this.name = method.getName();
 
-        this.returnType = methodDecorator.returnType();
+        this.returnType = (!methodDecorator.isSync()) ? methodDecorator.returnType() : methodDecorator.RETURN_STRING;
     }
 
     public String getReturnType() {

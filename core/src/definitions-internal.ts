@@ -8,7 +8,7 @@ import type { CapacitorPlatformsInstance } from './platforms';
 
 export interface PluginHeaderMethod {
   readonly name: string;
-  readonly rtype?: 'promise' | 'callback';
+  readonly rtype?: 'promise' | 'callback' | 'string';
 }
 
 export interface PluginHeader {
@@ -86,6 +86,16 @@ export interface CapacitorInstance extends CapacitorGlobal {
    * Low-level API for backwards compatibility.
    */
   createEvent?: (eventName: string, eventData?: any) => Event;
+
+  /**
+   * Sync Plugin Functions
+   */
+  callPluginMethodSync?: (
+    pluginName: string,
+    methodName: string,
+    args: any[]
+  ) => string | undefined;
+
 
   /**
    * Low-level API triggered from native implementations.

@@ -987,6 +987,7 @@ const initBridge = (w: any): void => {
     cap.isPluginAvailable = name =>
       Object.prototype.hasOwnProperty.call(cap.Plugins, name);
     cap.isNativePlatform = isNativePlatform;
+    cap.callPluginMethodSync = callPluginMethodSync;
 
     // create the postToNative() fn if needed
     if (getPlatformId(win) === 'android') {
@@ -1193,6 +1194,16 @@ const initBridge = (w: any): void => {
 
   initNativeBridge(w);
 };
+
+function callPluginMethodSync(pluginName: string, methodName: string, args: any[]): string | undefined {
+  const payload = {
+    type: 'Capacitor.callPluginMethodSync',
+    pluginName: pluginName,
+    methodName: methodName,
+    args: args
+  };
+  return prompt(JSON.stringify(payload)) || undefined;
+}
 
 initBridge(
   typeof globalThis !== 'undefined'

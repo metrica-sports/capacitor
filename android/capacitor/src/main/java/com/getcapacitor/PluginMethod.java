@@ -11,5 +11,8 @@ public @interface PluginMethod {
 
     String RETURN_NONE = "none";
 
+    String RETURN_STRING = "string"; //Only valid return type for sync methods.
+    
+    boolean isSync() default false;
     String returnType() default RETURN_PROMISE;
 }

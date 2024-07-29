@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.json.JSONArray;
 
 /**
  * PluginHandle is an instance of a plugin that has been registered
@@ -136,6 +137,27 @@ public class PluginHandle {
         }
 
         methodMeta.getMethod().invoke(this.instance, call);
+    }
+
+    /**
+     * Call a sync method on a plugin.
+     * @param methodName the name of the method to call
+     * @param args arguments passed to this method
+     * @throws InvalidPluginMethodException if no method was found on that plugin
+     */
+    public Object invokeSync(String methodName, JSONArray args)
+        throws PluginLoadException, InvalidPluginMethodException, InvocationTargetException, IllegalAccessException {
+        if (this.instance == null) {
+            // Can throw PluginLoadException
+            this.load();
+        }
+
+        PluginMethodHandle methodMeta = (PluginMethodHandle) pluginMethods.get(methodName);
+        if (methodMeta == null) {
+            throw new InvalidPluginMethodException("No sync method " + methodName + " found for plugin " + pluginClass.getName());
+        }
+
+        return methodMeta.getMethod().invoke(this.instance, args);
     }
 
     /**
