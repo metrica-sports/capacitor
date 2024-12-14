@@ -8,7 +8,7 @@
 
 extension CAPPluginMethod {
     public enum ReturnType: String {
-        case promise, callback, none
+        case promise, callback, string, none
     }
 
     public convenience init(_ selector: Selector, returnType: ReturnType = .promise) {

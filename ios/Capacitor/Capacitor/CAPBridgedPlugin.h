@@ -9,6 +9,7 @@
 #define CAPPluginReturnNone @"none"
 #define CAPPluginReturnCallback @"callback"
 #define CAPPluginReturnPromise @"promise"
+#define CAPPluginReturnString @"string" // Only valid for sync methods.
 
 @class CAPPluginCall;
 @class CAPPlugin;

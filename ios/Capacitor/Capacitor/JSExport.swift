@@ -161,6 +161,11 @@ internal class JSExport {
             lines.append("""
                     return w.Capacitor.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString), \(callbackParameter));
                     """)
+        } else if returnType == CAPPluginReturnString {
+            // ...using a sync method
+            lines.append("""
+                    return w.Capacitor.callPluginMethodSync('\(pluginClassName)', '\(methodName)', \(argObjectString));
+                    """)
         } else {
             CAPLog.print("Error: plugin method return type \(returnType) is not supported!")
         }

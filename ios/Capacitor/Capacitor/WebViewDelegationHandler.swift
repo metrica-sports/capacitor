@@ -249,8 +249,14 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
             if let dataFromString = prompt.data(using: .utf8, allowLossyConversion: false) {
                 if let payload = try JSONSerialization.jsonObject(with: dataFromString, options: .fragmentsAllowed) as? [String: AnyObject] {
                     let type = payload["type"] as? String
-
-                    if type == "CapacitorCookies.get" {
+                    if type == "Capacitor.callPluginMethodSync" {
+                        // Sync Method call
+                        let pluginName = payload["pluginName"] as! String
+                        let methodName = payload["methodName"] as! String
+                        let args = payload["args"] as! NSArray
+                        completionHandler(bridge!.handleSyncCall(pluginName: pluginName, methodName: methodName, args: args))
+                        return
+                    }else if type == "CapacitorCookies.get" {
                         completionHandler(CapacitorCookieManager(bridge!.config).getCookies())
                         // Don't present prompt
                         return

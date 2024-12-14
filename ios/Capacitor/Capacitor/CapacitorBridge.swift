@@ -440,6 +440,35 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
             self.webView?.isInspectable = isWebDebuggable
         }
     }
+    /**
+     Handle a synchronous call from JavaScript.
+    **/
+    func handleSyncCall(pluginName: String, methodName: String, args: NSArray) -> String{
+        guard let plugin = plugins[pluginName] else {
+            CAPLog.print("⚡️  Error loading plugin \(pluginName) for call. Check that the pluginId is correct")
+            return ""
+        }
+        
+        guard let method = plugin.getMethod(named: methodName) else {
+            CAPLog.print("⚡️  Error calling sync method \(methodName) on plugin \(pluginName): No method found.")
+            CAPLog.print("⚡️  Ensure plugin method exists and uses @objc in its declaration, and has been defined")
+            return ""
+        }
+
+        if method.returnType != "string" {
+            CAPLog.print("⚡️  Error calling sync method \(methodName) on plugin \(pluginName): Method return type must be string.")
+            return ""
+        }
+
+        let selector = method.selector
+        let data = plugin.perform(selector, with: args);
+        let value = Unmanaged<CFString>.fromOpaque(data!.toOpaque()).takeUnretainedValue() as CFString
+        if CFGetTypeID(value) == CFStringGetTypeID(){
+            return value as String
+        }
+        CAPLog.print("⚡️  Error calling sync method \(methodName) on plugin \(pluginName): Method must return a string.")
+        return ""
+    }
 
     /**
      Handle a call from JavaScript. First, find the corresponding plugin, construct a selector,
